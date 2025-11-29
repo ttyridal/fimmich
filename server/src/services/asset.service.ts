@@ -23,6 +23,7 @@ import { BaseService } from 'src/services/base.service';
 import { ISidecarWriteJob, JobItem, JobOf } from 'src/types';
 import { requireElevatedPermission } from 'src/utils/access';
 import { getAssetFiles, getMyPartnerIds, onAfterUnlink, onBeforeLink, onBeforeUnlink } from 'src/utils/asset.util';
+import { setDifference } from 'src/utils/set';
 
 @Injectable()
 export class AssetService extends BaseService {
@@ -362,14 +363,20 @@ export class AssetService extends BaseService {
 
   async deleteAll(auth: AuthDto, dto: AssetBulkDeleteDto): Promise<void> {
     const { ids, force } = dto;
+    await this.requireAccess({ auth, permission: Permission.AssetUpdate, ids });
 
-    await this.requireAccess({ auth, permission: Permission.AssetDelete, ids });
-    await this.assetRepository.updateAll(ids, {
+    const deleteable = await this.checkAccess({ auth, permission: Permission.AssetDelete, ids });
+    const archiving = setDifference(new Set(ids), deleteable);
+
+    await this.assetRepository.updateAll([...archiving], {
+      visibility: AssetVisibility.Archive});
+
+    await this.assetRepository.updateAll([...deleteable], {
       deletedAt: new Date(),
       status: force ? AssetStatus.Deleted : AssetStatus.Trashed,
     });
     await this.eventRepository.emit(force ? 'AssetDeleteAll' : 'AssetTrashAll', {
-      assetIds: ids,
+      assetIds: [...deleteable],
       userId: auth.user.id,
     });
   }
