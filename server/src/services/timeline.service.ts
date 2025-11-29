@@ -10,6 +10,14 @@ import { getMyPartnerIds } from 'src/utils/asset.util';
 @Injectable()
 export class TimelineService extends BaseService {
   async getTimeBuckets(auth: AuthDto, dto: TimeBucketDto): Promise<TimeBucketsResponseDto[]> {
+
+      const requestedArchived = dto.visibility === AssetVisibility.Archive || dto.visibility === undefined;
+      const requestedFavorite = dto.isFavorite === true || dto.isFavorite === false;
+      const requestedTrash = dto.isTrashed === true;
+      if (requestedArchived || requestedFavorite || requestedTrash) {}
+      else dto.withPartners = true; // always include partners.. it's required for showing partners photo of persons
+
+
     await this.timeBucketChecks(auth, dto);
     const timeBucketOptions = await this.buildTimeBucketOptions(auth, dto);
     return await this.assetRepository.getTimeBuckets(timeBucketOptions);
@@ -17,6 +25,13 @@ export class TimelineService extends BaseService {
 
   // pre-jsonified response
   async getTimeBucket(auth: AuthDto, dto: TimeBucketAssetDto): Promise<string> {
+      const requestedArchived = dto.visibility === AssetVisibility.Archive || dto.visibility === undefined;
+      const requestedFavorite = dto.isFavorite === true || dto.isFavorite === false;
+      const requestedTrash = dto.isTrashed === true;
+      if (requestedArchived || requestedFavorite || requestedTrash) {}
+      else dto.withPartners = true; // always include partners.. it's required for showing partners photo of persons
+
+
     await this.timeBucketChecks(auth, dto);
     const timeBucketOptions = await this.buildTimeBucketOptions(auth, { ...dto });
 
@@ -35,7 +50,6 @@ export class TimelineService extends BaseService {
         const partnerIds = await getMyPartnerIds({
           userId: auth.user.id,
           repository: this.partnerRepository,
-          timelineEnabled: true,
         });
         userIds.push(...partnerIds);
       }
