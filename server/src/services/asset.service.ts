@@ -101,6 +101,10 @@ export class AssetService extends BaseService {
       delete data.owner;
     }
 
+    // lie to the client about the owner..
+    // this is required to show all persons in photo, and the actions
+    data.ownerId = auth.user.id;
+
     if (data.ownerId !== auth.user.id || auth.sharedLink) {
       data.people = [];
     }
