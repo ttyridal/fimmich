@@ -45,9 +45,20 @@ import { ImmichFileResponse } from 'src/utils/file';
 import { mimeTypes } from 'src/utils/mime-types';
 import { isFacialRecognitionEnabled } from 'src/utils/misc';
 import { Point, transformPoints } from 'src/utils/transform';
+import { getMyPartnerIds } from 'src/utils/asset.util';
 
 @Injectable()
 export class PersonService extends BaseService {
+  async withPartners(auth: AuthDto): Promise<string[]>{
+    let userIds: string[];
+    userIds = [auth.user.id];
+    const partnerIds = await getMyPartnerIds({
+          userId: auth.user.id,
+          repository: this.partnerRepository,
+        });
+    userIds.push(...partnerIds);
+    return userIds;
+  }
   async getAll(auth: AuthDto, dto: PersonSearchDto): Promise<PeopleResponseDto> {
     const { withHidden = false, closestAssetId, closestPersonId, page, size } = dto;
     let closestFaceAssetId = closestAssetId;
@@ -63,13 +74,16 @@ export class PersonService extends BaseService {
       }
       closestFaceAssetId = person.faceAssetId;
     }
+
+    let userIds = await this.withPartners(auth);
+
     const { machineLearning } = await this.getConfig({ withCache: false });
-    const { items, hasNextPage } = await this.personRepository.getAllForUser(pagination, auth.user.id, {
+    const { items, hasNextPage } = await this.personRepository.getAllForUsers(pagination, userIds, {
       minimumFaceCount: machineLearning.facialRecognition.minFaces,
       withHidden,
       closestFaceAssetId,
     });
-    const { total, hidden } = await this.personRepository.getNumberOfPeople(auth.user.id);
+    const { total, hidden } = await this.personRepository.getNumberOfPeopleForUsers(userIds);
 
     return {
       people: items.map((person) => mapPerson(person)),

@@ -9,7 +9,10 @@ import { DB } from 'src/schema';
 import { AssetFaceTable } from 'src/schema/tables/asset-face.table';
 import { FaceSearchTable } from 'src/schema/tables/face-search.table';
 import { PersonTable } from 'src/schema/tables/person.table';
-import { removeUndefinedKeys } from 'src/utils/database';
+import {
+    anyUuid,
+    removeUndefinedKeys
+} from 'src/utils/database';
 import { paginationHelper, PaginationOptions } from 'src/utils/pagination';
 
 export interface PersonSearchOptions {
@@ -150,6 +153,11 @@ export class PersonRepository {
 
   @GenerateSql({ params: [{ take: 1, skip: 0 }, DummyValue.UUID] })
   async getAllForUser(pagination: PaginationOptions, userId: string, options?: PersonSearchOptions) {
+      return await this.getAllForUsers(pagination, [userId], options);
+  }
+
+  @GenerateSql({ params: [{ take: 1, skip: 0 }, DummyValue.UUID] })
+  async getAllForUsers(pagination: PaginationOptions, userIds: string[], options?: PersonSearchOptions) {
     const items = await this.db
       .selectFrom('person')
       .selectAll('person')
@@ -160,7 +168,7 @@ export class PersonRepository {
           .on('asset.visibility', '=', sql.lit(AssetVisibility.Timeline))
           .on('asset.deletedAt', 'is', null),
       )
-      .where('person.ownerId', '=', userId)
+      .where('person.ownerId', '=', anyUuid(userIds))
       .where('asset_face.deletedAt', 'is', null)
       .where('asset_face.isVisible', 'is', true)
       .orderBy('person.isHidden', 'asc')
@@ -321,13 +329,13 @@ export class PersonRepository {
       .selectFrom('person')
       .selectAll('person')
       .where((eb) =>
-        eb.and([
-          eb('person.ownerId', '=', userId),
+        //eb.and([
+        //  eb('person.ownerId', '=', userId),
           eb.or([
             eb(eb.fn('lower', ['person.name']), 'like', `${personName.toLowerCase()}%`),
             eb(eb.fn('lower', ['person.name']), 'like', `% ${personName.toLowerCase()}%`),
           ]),
-        ]),
+       // ]),
       )
       .limit(1000)
       .$if(!withHidden, (qb) => qb.where('person.isHidden', '=', false))
@@ -368,6 +376,11 @@ export class PersonRepository {
 
   @GenerateSql({ params: [DummyValue.UUID] })
   getNumberOfPeople(userId: string) {
+      return this.getNumberOfPeopleForUsers([userId])
+  }
+
+  @GenerateSql({ params: [DummyValue.UUID] })
+  getNumberOfPeopleForUsers(userIds: string[]) {
     const zero = sql.lit(0);
     return this.db
       .selectFrom('person')
@@ -389,7 +402,7 @@ export class PersonRepository {
             ),
         ),
       )
-      .where('person.ownerId', '=', userId)
+      .where('person.ownerId', '=', anyUuid(userIds))
       .select((eb) => eb.fn.coalesce(eb.fn.countAll<number>(), zero).as('total'))
       .select((eb) => eb.fn.coalesce(eb.fn.countAll<number>().filterWhere('isHidden', '=', true), zero).as('hidden'))
       .executeTakeFirstOrThrow();
