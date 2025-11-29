@@ -256,6 +256,6 @@ export function mapFaces(face: AssetFace, auth: AuthDto): AssetFaceResponseDto {
     boundingBoxY1: face.boundingBoxY1,
     boundingBoxY2: face.boundingBoxY2,
     sourceType: face.sourceType,
-    person: face.person?.ownerId === auth.user.id ? mapPerson(face.person) : null,
+    person: face.person ? mapPerson(face.person) : null,
   };
 }
