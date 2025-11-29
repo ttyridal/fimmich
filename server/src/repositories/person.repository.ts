@@ -324,18 +324,18 @@ export class PersonRepository {
   }
 
   @GenerateSql({ params: [DummyValue.UUID, DummyValue.STRING, { withHidden: true }] })
-  getByName(userId: string, personName: string, { withHidden }: PersonNameSearchOptions) {
+  getByName(userIds: string[], personName: string, { withHidden }: PersonNameSearchOptions) {
     return this.db
       .selectFrom('person')
       .selectAll('person')
       .where((eb) =>
-        //eb.and([
-        //  eb('person.ownerId', '=', userId),
+        eb.and([
+          eb('person.ownerId', '=', anyUuid(userIds)),
           eb.or([
             eb(eb.fn('lower', ['person.name']), 'like', `${personName.toLowerCase()}%`),
             eb(eb.fn('lower', ['person.name']), 'like', `% ${personName.toLowerCase()}%`),
           ]),
-       // ]),
+        ]),
       )
       .limit(1000)
       .$if(!withHidden, (qb) => qb.where('person.isHidden', '=', false))

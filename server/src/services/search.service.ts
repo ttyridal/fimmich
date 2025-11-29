@@ -29,7 +29,15 @@ export class SearchService extends BaseService {
   private embeddingCache = new LRUMap<string, string>(100);
 
   async searchPerson(auth: AuthDto, dto: SearchPeopleDto): Promise<PersonResponseDto[]> {
-    const people = await this.personRepository.getByName(auth.user.id, dto.name, { withHidden: dto.withHidden });
+    let userIds: string[];
+    userIds = [auth.user.id];
+    const partnerIds = await getMyPartnerIds({
+          userId: auth.user.id,
+          repository: this.partnerRepository,
+        });
+    userIds.push(...partnerIds);
+
+    const people = await this.personRepository.getByName(userIds, dto.name, { withHidden: dto.withHidden });
     return people.map((person) => mapPerson(person));
   }
 

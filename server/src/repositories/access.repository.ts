@@ -399,7 +399,7 @@ class PersonAccess {
       .selectFrom('person')
       .select('person.id')
       .where('person.id', 'in', [...personIds])
-      .where('person.ownerId', '=', userId)
+      //.where('person.ownerId', '=', userId)
       .execute()
       .then((persons) => new Set(persons.map((person) => person.id)));
   }
@@ -416,7 +416,7 @@ class PersonAccess {
       .select('asset_face.id')
       .leftJoin('asset', (join) => join.onRef('asset.id', '=', 'asset_face.assetId').on('asset.deletedAt', 'is', null))
       .where('asset_face.id', 'in', [...assetFaceIds])
-      .where('asset.ownerId', '=', userId)
+      //.where('asset.ownerId', '=', userId)
       .execute()
       .then((faces) => new Set(faces.map((face) => face.id)));
   }
