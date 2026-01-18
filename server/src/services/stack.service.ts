@@ -20,6 +20,7 @@ export class StackService extends BaseService {
   async create(auth: AuthDto, dto: StackCreateDto): Promise<StackResponseDto> {
     await this.requireAccess({ auth, permission: Permission.AssetUpdate, ids: dto.assetIds });
 
+    //TODO: create stacks in contect of partner ?
     const stack = await this.stackRepository.create({ ownerId: auth.user.id }, dto.assetIds);
 
     await this.eventRepository.emit('StackCreate', { stackId: stack.id, userId: auth.user.id });
