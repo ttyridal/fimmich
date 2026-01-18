@@ -48,7 +48,8 @@ export class DuplicateRepository {
             .select((eb) =>
               eb.fn.jsonAgg('asset2').orderBy('asset.localDateTime', 'asc').$castTo<MapAsset[]>().as('assets'),
             )
-            .where('asset.ownerId', '=', asUuid(userId))
+            //.where('asset.ownerId', '=', asUuid(userId))
+            // TODO: partners
             .where('asset.duplicateId', 'is not', null)
             .$narrowType<{ duplicateId: NotNull }>()
             .where('asset.deletedAt', 'is', null)

@@ -290,6 +290,7 @@ const checkOtherAccess = async (access: AccessRepository, request: OtherAccessRe
 
     case Permission.StackRead: {
       return access.stack.checkOwnerAccess(auth.user.id, ids);
+      //TODO
     }
 
     case Permission.StackUpdate: {
