@@ -17,11 +17,11 @@
 ## What is this all about?
 
 Immich is a fantastic photo management and gallery software! For my use, however, it is lacking in one key use case: A family with a large
-shared photo collection who want's to share the burden of tagging faces.  For years(?) the Immich team has had this on the roadmap without any
-(visible) progress. This fork is me growing tired of waiting.
+shared photo collection wants to share the burden of tagging faces - And benefit from the other's work.
+For years(?) the Immich team has had this on the roadmap without any (visible) progress. This fork is me growing tired of waiting.
 
 ### How this fork changes Immich
-This fork takes a heavy handed approach: Person objects and face embeddings are made global. Further the partner of a partner share is given elevated
+This fork takes a heavy handed approach: Person objects and face embeddings are made global. Further the "receiver" of a partner share is given elevated
 privileges, basically rendering the image collection truly shared.
 
 ### The result
@@ -33,16 +33,24 @@ their own persons/faces with the persons in the shared library.  Privacy is stil
 Additionally user B can delete and archive the shared photos. They will always be archived, though, so user A can review the deletes. 
 User B can not see user A's archived photos.
 
+Both user A and user B can make stacks of user A's photos - but see caveat below.
+
+Both user A and user B can make edits to user A's photos.
+
 
 ### Recommended setup
 If the users want to maintain a shared and a private collection, it is recommended to have a common "shared account" that owns the
 shared photos. Typically configured with an external library.
 
+
 ### todo / unsolved.
 - When a face/person object is created in user B's account the ownership should be set to user A on maintain all users visibility of the person in 
 search etc. Patches accepted.
 
-- I would like to enable sharing of Stacks/duplicate overview too.
+-When user B makes a stack of images from both A and B - and the primary photo is from B's collection
+The image will disappear for A. if the stack contains mixed ownership, the primary photo must be from A.
+
+The best experience is achieved when user A and user B are both partner-sharing to the other.
 
 
 ## The future
