@@ -338,7 +338,7 @@ class StackAccess {
       .selectFrom('stack')
       .select('stack.id')
       .where('stack.id', 'in', [...stackIds])
-      .where('stack.ownerId', '=', userId)
+      //.where('stack.ownerId', '=', userId)
       .execute()
       .then((stacks) => new Set(stacks.map((stack) => stack.id)));
   }

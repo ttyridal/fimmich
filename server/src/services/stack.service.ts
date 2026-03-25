@@ -31,6 +31,8 @@ export class StackService extends BaseService {
   async get(auth: AuthDto, id: string): Promise<StackResponseDto> {
     await this.requireAccess({ auth, permission: Permission.StackRead, ids: [id] });
     const stack = await this.findOrFail(id);
+    // lie to the ui about owner of assets so all options (ie change stack primary asset) is available
+    stack.assets = stack.assets.map(x=>({...x, ownerId: auth.user.id}))
     return mapStack(stack, { auth });
   }
 
