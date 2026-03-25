@@ -10,6 +10,7 @@ import { AssetDuplicateResult } from 'src/repositories/search.repository';
 import { BaseService } from 'src/services/base.service';
 import { JobItem, JobOf } from 'src/types';
 import { isDuplicateDetectionEnabled } from 'src/utils/misc';
+import { getMyPartnerIds } from 'src/utils/asset.util';
 
 @Injectable()
 export class DuplicateService extends BaseService {
@@ -88,12 +89,20 @@ export class DuplicateService extends BaseService {
       return JobStatus.Failed;
     }
 
+    let userIds: string[];
+    userIds = [asset.ownerId];
+    const partnerIds = await getMyPartnerIds({
+          userId: asset.ownerId,
+          repository: this.partnerRepository,
+        });
+    userIds.push(...partnerIds);
+
     const duplicateAssets = await this.duplicateRepository.search({
       assetId: asset.id,
       embedding: asset.embedding,
       maxDistance: machineLearning.duplicateDetection.maxDistance,
       type: asset.type,
-      userIds: [asset.ownerId],
+      userIds,
     });
 
     let assetIds = [asset.id];
