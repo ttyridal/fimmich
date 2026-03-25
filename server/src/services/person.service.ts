@@ -500,8 +500,17 @@ export class PersonService extends BaseService {
       return JobStatus.Skipped;
     }
 
+    let userIds: string[];
+    userIds = [face.asset.ownerId];
+    const partnerIds = await getMyPartnerIds({
+          userId: face.asset.ownerId,
+          repository: this.partnerRepository,
+        });
+    userIds.push(...partnerIds);
+
+
     const matches = await this.searchRepository.searchFaces({
-      userIds: [face.asset.ownerId],
+      userIds,
       embedding: face.faceSearch.embedding,
       maxDistance: machineLearning.facialRecognition.maxDistance,
       numResults: machineLearning.facialRecognition.minFaces,
@@ -528,7 +537,7 @@ export class PersonService extends BaseService {
     let personId = matches.find((match) => match.personId)?.personId;
     if (!personId) {
       const matchWithPerson = await this.searchRepository.searchFaces({
-        userIds: [face.asset.ownerId],
+        userIds,
         embedding: face.faceSearch.embedding,
         maxDistance: machineLearning.facialRecognition.maxDistance,
         numResults: 1,
