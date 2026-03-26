@@ -726,9 +726,17 @@ export class AssetRepository {
           .$if(!!options.withStacked, (qb) =>
             qb
               .leftJoin('stack', (join) =>
-                join.onRef('stack.id', '=', 'asset.stackId').onRef('stack.primaryAssetId', '=', 'asset.id'),
+                join.onRef('stack.id', '=', 'asset.stackId').onRef('stack.primaryAssetId', '=', 'asset.id').on("stack.ownerId", '=', anyUuid(options.userIds!)),
               )
-              .where((eb) => eb.or([eb('asset.stackId', 'is', null), eb(eb.table('stack'), 'is not', null)])),
+              .where((eb) =>
+                  eb.or([
+                      eb('asset.stackId', 'is', null),
+                      eb(eb.table('stack'), 'is not', null),
+                      eb.and([
+                          eb('asset.stackId', 'is not', null),
+                          eb(eb.table('stack'), 'is', null)
+                      ])
+                  ])),
           )
           .$if(!!options.userIds, (qb) => qb.where('asset.ownerId', '=', anyUuid(options.userIds!)))
           .$if(options.isFavorite !== undefined, (qb) => qb.where('asset.isFavorite', '=', options.isFavorite!))
@@ -825,7 +833,9 @@ export class AssetRepository {
                     eb
                       .selectFrom('stack')
                       .whereRef('stack.id', '=', 'asset.stackId')
-                      .whereRef('stack.primaryAssetId', '!=', 'asset.id'),
+                      .whereRef('stack.primaryAssetId', '!=', 'asset.id')
+                      .where('stack.ownerId', '=', anyUuid(options.userIds!))
+                      .select('stack.id') // Required for subquery syntax,
                   ),
                 ),
               )
@@ -835,6 +845,9 @@ export class AssetRepository {
                     .selectFrom('asset as stacked')
                     .select(sql`array[stacked."stackId"::text, count('stacked')::text]`.as('stack'))
                     .whereRef('stacked.stackId', '=', 'asset.stackId')
+                    //subquery
+                    .innerJoin('stack', 'stack.id', 'stacked.stackId')
+                    .where('stack.ownerId', '=', anyUuid(options.userIds!))
                     .where('stacked.deletedAt', 'is', null)
                     .where('stacked.visibility', '=', AssetVisibility.Timeline)
                     .groupBy('stacked.stackId')
